@@ -1,0 +1,40 @@
+---
+### ---------------------------------------------------------------------------
+### FIND CORE DUMPS ON A JUNOS DEVICE AND DOWNLOAD THEM TO THE LOCAL DIRECTORY
+### ---------------------------------------------------------------------------
+- hosts: all
+  connection: local
+  gather_facts: False
+  become: False
+  roles:
+    - juniper.junos
+  vars:
+    provider:
+      host: tatooine.network.home
+      username: "cremsburg"
+      password: "cooler_than_a_polar_bear's_toenail"
+      # ssh_private_key_file: "~/.ssh/id_rsa"
+  tasks:
+    - name: "retrieve list of core dumps"
+      juniper_junos_command:
+        user: "{{ provider.username }}"
+        passwd: "{{ provider.password }}"
+        commands: 
+          - "show system core-dumps"
+        format: json
+      register: result
+
+    - name: "run through cleanup function"
+      set_fact:
+        core_dumps: "{{ result | coredumps }}"
+
+    - name: "print the list of coredumps to the screen"
+      debug:
+        var: core_dumps
+
+    - name: "download coredump"
+      junipernetworks.junos.junos_scp:
+        provider: "{{ provider }}"
+        src: "{{ item }}"
+        remote_src: true
+      loop: "{{ core_dumps }}"

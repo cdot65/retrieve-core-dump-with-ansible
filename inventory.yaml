@@ -1,0 +1,6 @@
+---
+all:
+  children:
+    home:
+      hosts:
+        tatooine.network.home:
